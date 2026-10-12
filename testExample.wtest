@@ -1,9 +1,63 @@
-import example.pepita
+import example.*
 
-describe "group of tests for pepita" {
-
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
+describe "materias" {
+  const programacion = new Carrera()
+  const tUESS = new Carrera()
+  const tO = new Carrera()
+  const epl = new Materia()
+  const matematica1 = new Materia()
+  const objetos1 = new Materia()
+  const objetos2 = new Materia()
+  const objetos3 = new Materia()
+  const bd = new Materia()
+  const pConc = new Materia()
+  const meya = new Materia()
+  const tys = new Materia()
+  const economia = new Materia()
+  const desarrolloLocal = new Materia()
+  const lea = new Materia()
+  const cienciasDeLaSalud = new Materia()
+  const psicologia = new Materia()
+  const antropologia = new Materia()
+  const sociologia = new Materia()
+  const alex = new Estudiante()
+  
+  method initialize() {
+    programacion.agregarMaterias(
+      #{epl, matematica1, objetos1, objetos2, objetos3, bd, pConc}
+    )
+    tUESS.agregarMaterias(#{meya, tys, economia, desarrolloLocal})
+    tO.agregarMaterias(
+      #{lea, cienciasDeLaSalud, psicologia, antropologia, sociologia}
+    )
+    alex.inscripcionEnCarrera(programacion)
+    alex.inscripcionEnCarrera(tUESS)
   }
-
+  
+  test "Inscripción a carreras" {
+    assert.equals(#{programacion, tUESS}, alex.carrerasInscriptas())
+    assert.that(alex.materiaPerteneceACarrera(bd))
+    assert.notThat(alex.materiaPerteneceACarrera(psicologia))
+    assert.throwsException({ alex.inscripcionEnCarrera(programacion) })
+  }
+  
+  test "Historia académica" {
+    alex.cursadaFinalizadaEn(matematica1, 2)
+    alex.cursadaFinalizadaEn(objetos1, 10)
+    alex.cursadaFinalizadaEn(economia, 6)
+    alex.cursadaFinalizadaEn(tys, 8)
+    alex.cursadaFinalizadaEn(matematica1, 8)
+    alex.cursadaFinalizadaEn(bd, 2)
+    assert.throwsException({ alex.cursadaFinalizadaEn(matematica1, 7) })
+    assert.throwsException({ alex.cursadaFinalizadaEn(matematica1, 12) })
+    assert.that(alex.aproboMateria(matematica1))
+    assert.notThat(alex.aproboMateria(bd))
+    assert.equals(9, alex.promedioEnCarrera(programacion))
+    assert.equals(2, alex.cantidadDeMateriasAprobadasEnCarrera(programacion))
+    assert.equals(7, alex.promedioEnCarrera(tUESS))
+    assert.throwsException({ alex.promedioEnCarrera(tO) })
+    alex.inscripcionEnCarrera(tO)
+    assert.throwsException({ alex.promedioEnCarrera(tO) })
+     assert.equals(9, alex.promedioDeNotas())
+  }
 }
