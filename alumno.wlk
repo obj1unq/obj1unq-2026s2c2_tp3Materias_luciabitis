@@ -64,7 +64,7 @@ class Estudiante {
 
 class HistorialAcademicoDeAlumno {
   const historialDeMaterias = []
-  const carrerasInscriptas = []
+  const carrerasInscriptas = #{}
   const materiasAprobadas = #{}
   
   method validarInscripcion(carrera) {
@@ -137,9 +137,7 @@ method agregarMateriaYNota(materia, _nota) {
     { cursada => cursada.nota() }
   )
   
-  method cantidadDeMateriasAprobadas() {
-    materiasAprobadas.size()
-  }
+   method cantidadDeMateriasAprobadas() = materiasAprobadas.size()
   
   method esMateriaApta(materia) = (self.materiaPerteneceACarrera(
     materia
@@ -159,9 +157,9 @@ method creditosDeCarreraDeMateria(materia) = self.materiasAprobadasDeCarrera(
     self.carreraDe(materia)
   ).sum({ cursada => cursada.nombreDeMateria().creditos() })
   
-  method aproboAño(materia, año) = self.carreraDe(materia).materias().all(
-    { mat => (mat.año() == año) && self.esMateriaAprobada(mat) }
-  )
+  method aproboAño(_materia, año) = self.carreraDe(_materia).materias()
+  .filter({ materia => materia.año() == año })
+  .all({ materia => self.esMateriaAprobada(materia) })
 }
 
 class MateriaYNotaDeAlumno {

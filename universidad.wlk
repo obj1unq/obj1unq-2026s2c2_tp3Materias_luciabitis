@@ -23,10 +23,6 @@ class Materia {
   var property año = 0
   var property creditos = 0
   
-  method requisitos(_values) {
-    requisitos = _values
-  }
-  
   method esAlumnoIncripto(alumno) = alumnos.contains(alumno)
   
   method alumnoCumpleRequisitos(alumno) = requisitos.esCumplidoPor(alumno, self)
