@@ -1,10 +1,13 @@
+import universidad.*
+import requisitos.*
+
+
 class Estudiante {
   const historialAcademico = new HistorialAcademicoDeAlumno()
   
   method inscripcionEnCarrera(carrera) {
     historialAcademico.validarInscripcion(carrera)
     historialAcademico.agregarCarrera(carrera)
-    carrera.inscribirAlumno(self)
   }
   
   method materiaPerteneceACarrera(
@@ -13,35 +16,55 @@ class Estudiante {
   
   method carrerasInscriptas() = historialAcademico.carrerasInscriptas()
   
-  method cursadaFinalizada(materia, nota) {
+  method cursadaFinalizadaEn(materia, nota) {
     historialAcademico.materiaCursada(materia, nota)
   }
   
-  method aproboMateria(materia) {
-    historialAcademico.esMateriaAprobada(materia)
-  }
-
-  method promedioEnCarrera(carrera) {
-    historialAcademico.promedioDeCarrera(carrera)
-  }
-
-  method cantidadDeMateriasAprobadasEnCarrera(carrera) {
-    historialAcademico.cantidadDeMateriasAprobadasEnCarrera(carrera)
-  }
-
-  method promedioDeNotas() {
-    historialAcademico.promedio()
+  method aproboMateria(materia) = historialAcademico.esMateriaAprobada(materia)
+  
+  method promedioEnCarrera(carrera) = historialAcademico.promedioEnCarrera(
+    carrera
+  )
+  
+  method cantidadDeMateriasAprobadasEnCarrera(
+    carrera
+  ) = historialAcademico.cantidadDeMateriasAprobadasEnCarrera(carrera)
+  
+  method promedioDeNotas() = historialAcademico.promedioDeNotas()
+  
+  method cantidadDeMateriasAprobadas() = historialAcademico.cantidadDeMateriasAprobadas()
+  
+  method puedeInscribirseAMateria(materia) = ((self.materiaPerteneceACarrera(
+    materia
+  ) && (!self.aproboMateria(materia))) && (!materia.esAlumnoIncripto(
+    self
+  ))) && materia.alumnoCumpleRequisitos(self)
+  
+  method materiasAccesiblesDeCarrera(carrera) = carrera.materias().filter(
+    { materia => self.puedeInscribirseAMateria(materia) }
+  )
+  
+  method inscribirEnMateria(materia) {
+    self.validarInscripcionDeMateria(materia)
+    materia.inscribirAlumno(self)
   }
   
-  method cantidadDeMateriasAprobadas() {
-    historialAcademico.cantidadDeMateriasAprobadas()
+  method validarInscripcionDeMateria(materia) {
+    if (!self.puedeInscribirseAMateria(materia)) self.error(
+        "no es posible inscribirse a esta materia"
+      )
   }
-
+  
+  method carreraDe(materia) = historialAcademico.carreraDe(materia)
+  
+  method aproboAño(materia, año) = historialAcademico.aproboAño(materia, año)
+  
+  method creditos(materia) = historialAcademico.creditosDeCarreraDeMateria(materia)
 }
 
 class HistorialAcademicoDeAlumno {
   const historialDeMaterias = []
-  const carrerasInscriptas = #{}
+  const carrerasInscriptas = []
   const materiasAprobadas = #{}
   
   method validarInscripcion(carrera) {
@@ -65,53 +88,84 @@ class HistorialAcademicoDeAlumno {
     self.agregarMateriaYNota(materia, nota)
   }
   
-  method agregarMateriaYNota(materia, _nota) {
+method agregarMateriaYNota(materia, _nota) {
     const materiaCursada = new MateriaYNotaDeAlumno(
       nombreDeMateria = materia,
-      nota = _nota
+      nota = _nota,
+      carrera = carrerasInscriptas.find(
+        { carrera => carrera.materiaPertenece(materia) }
+      )
     )
     historialDeMaterias.add(materiaCursada)
-    self.agregarMateriaAprobada(materia, _nota)
+    self.agregarMateriaAprobada(materiaCursada)
   }
-  
   method validarMateriaYNota(materia, nota) {
-    if ((!nota.between(1, 10)) && (!self.esMateriaAprobada(materia)))
-      self.error("no es posible registrar esta materia")
+    if ((!nota.between(1, 10)) || self.esMateriaAprobada(materia)) self.error(
+        "no es posible registrar esta materia"
+      )
   }
   
-  method esMateriaAprobada(materia) = materiasAprobadas.contains(materia)
+  method esMateriaAprobada(materia) = materiasAprobadas.any(
+    { cursada => cursada.nombreDeMateria() == materia }
+  )
   
-  method agregarMateriaAprobada(materia, nota) {
-    if (self.esNotaAprobada(nota)) materiasAprobadas.add(materia)
+  method agregarMateriaAprobada(materia) {
+    if (self.esNotaAprobada(materia.nota())) materiasAprobadas.add(materia)
   }
   
   method esNotaAprobada(nota) = nota >= 6
-
-  method promedioEnCarrera(carrera) {
-    return self.sumaDeNotasAprobadasEnCarrera(carrera) / self.cantidadDeMateriasAprobadasEnCarrera(carrera)
-  }
-
-  method materiasAprobadasDeCarrera(carrera) {
-    materiasAprobadas.filter({closure})
-  }
-  method cantidadDeMateriasAprobadasEnCarrera(carrera) {
-    historialAcademico.cantidadDeMateriasAprobadasEnCarrera(carrera)
-  }
-
-  method promedioDeNotas() {
-    historialAcademico.promedio()
-  }
+  
+  method promedioEnCarrera(carrera) = self.sumaDeNotasAprobadasEnCarrera(
+    carrera
+  ) / self.cantidadDeMateriasAprobadasEnCarrera(carrera)
+  
+  method cantidadDeMateriasAprobadasEnCarrera(
+    carrera
+  ) = self.materiasAprobadasDeCarrera(carrera).size()
+  
+  method materiasAprobadasDeCarrera(carrera) = materiasAprobadas.filter(
+    { materia => materia.carrera() == carrera }
+  )
+  
+  method sumaDeNotasAprobadasEnCarrera(
+    carrera
+  ) = self.materiasAprobadasDeCarrera(carrera).sum(
+    { materia => materia.nota() }
+  )
+  
+  method promedioDeNotas() = materiasAprobadas.average(
+    { cursada => cursada.nota() }
+  )
   
   method cantidadDeMateriasAprobadas() {
-    historialAcademico.cantidadDeMateriasAprobadas()
+    materiasAprobadas.size()
   }
+  
+  method esMateriaApta(materia) = (self.materiaPerteneceACarrera(
+    materia
+  ) && (!self.esMateriaAprobada(materia))) && (!self.InscriptoEnMateria(
+    materia
+  ))
+  
+  method InscriptoEnMateria(materia) = materia.esAlumnoIncripto(self)
+  
+  method seCumplenRequisitosDe(materia) = materia.alumnoCumpleRequisitos(self)
+  
+  method carreraDe(materia) = self.carrerasInscriptas().find(
+    { carrera => carrera.materiaPertenece(materia) }
+  )
+  
+method creditosDeCarreraDeMateria(materia) = self.materiasAprobadasDeCarrera(
+    self.carreraDe(materia)
+  ).sum({ cursada => cursada.nombreDeMateria().creditos() })
+  
+  method aproboAño(materia, año) = self.carreraDe(materia).materias().all(
+    { mat => (mat.año() == año) && self.esMateriaAprobada(mat) }
+  )
 }
 
 class MateriaYNotaDeAlumno {
-  var property nombreDeMateria = matematica1
+  var property nombreDeMateria = new Materia()
   var property nota = 10
-
-  method esDeCarrera(carrera) {
-    
-  }
+  var property carrera = new Carrera()
 }
