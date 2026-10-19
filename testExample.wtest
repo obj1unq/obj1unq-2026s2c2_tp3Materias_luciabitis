@@ -1,5 +1,5 @@
 import universidad.*
-import alumno.*
+import alumno2.*
 import requisitos.*
 
 describe "materias" {

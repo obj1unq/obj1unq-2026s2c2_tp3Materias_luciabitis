@@ -37,7 +37,7 @@ class Estudiante {
       nombreDeMateria = materia,
       nota = _nota,
       carrera = carrerasInscriptas.find(
-        { carrera => carrera.materiaPertenece(materia) }
+        { carrera =s> carrera.materiaPertenece(materia) }
       )
     )
     historialDeMaterias.add(materiaCursada)
@@ -124,8 +124,8 @@ class Estudiante {
   ).sum({ cursada => cursada.nombreDeMateria().creditos() })
 }
 
-class MateriaYNotaDeAlumno {
-  var property nombreDeMateria = new Materia()
-  var property nota = 10
-  var property carrera = new Carrera()
+class MateriaCursada {
+  var property nombreDeMateria
+  var property nota 
 }
+
