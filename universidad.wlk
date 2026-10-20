@@ -15,6 +15,8 @@ class Carrera {
   method materiasDelAñoAnteriorAMateria(_materia) = materias.filter(
     { materia => materia.año() == (_materia.año() - 1) }
   )
+
+  
 }
 
 class Materia {

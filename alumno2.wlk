@@ -32,21 +32,49 @@ class Estudiante {
     historialAcademico.agregarCursada(materia, nota)
   }
   
-  method aproboMateria(materia) {
-    historialAcademico.esCursadaAprobada(materia)
-  }
+  method aproboMateria(materia) = historialAcademico.esCursadaAprobada(materia)
   
-  method promedioEnCarrera(carrera) {
-    historialAcademico.promedioEnCarrera(carrera)
-  }
+  method promedioEnCarrera(carrera) = historialAcademico.promedioEnCarrera(
+    carrera
+  )
   
-  method cantidadDeMateriasAprobadasEnCarrera(carrera) {
-    historialAcademico.cantidadDeMateriasAprobadasEnCarrera(carrera)
-  }
+  method cantidadDeMateriasAprobadasEnCarrera(
+    carrera
+  ) = historialAcademico.cantidadDeMateriasAprobadasEnCarrera(carrera)
   
-  method promedioDeNotas() {
-    historialAcademico.promedio()
+  method promedioDeNotas() = historialAcademico.promedio()
+  
+  // Inscripciones a las materias
+  method puedeInscribirseAMateria(materia) = ((self.materiaPerteneceACarrera(
+    materia
+  ) && (!self.aproboMateria(materia))) && (!materia.esAlumnoIncripto(
+    self
+  ))) && materia.alumnoCumpleRequisitos(self)
+  
+  method materiasAccesiblesDeCarrera(carrera) = carrera.materias().filter(
+    { materia => self.puedeInscribirseAMateria(materia) }
+  )
+  
+  method inscribirEnMateria(materia) {
+    self.validarInscripcionDeMateria(materia)
+    materia.inscribirAlumno(self)
   }
+
+  method validarInscripcionDeMateria(materia) {
+    if (!self.puedeInscribirseAMateria(materia)) self.error(
+        "no es posible inscribirse a esta materia"
+      )
+  }
+
+   method InscriptoEnMateria(materia) = materia.esAlumnoIncripto(self)
+  
+  method seCumplenRequisitosDe(materia) = materia.alumnoCumpleRequisitos(self)
+  
+method aproboAño(materia, año) = historialAcademico.aproboAño(materia, año)
+  
+  method creditos(materia) = historialAcademico.creditosDeCarreraDeMateria(materia)
+
+
 }
 
 class HistorialAcademicoDeAlumno {
@@ -54,31 +82,59 @@ class HistorialAcademicoDeAlumno {
   
   //cursadas
   method esCursadaAprobada(materia) = cursadas.any(
-    { cursada =>
-      (cursada.nombreDeMateria() == materia) && cursada.esAprobada() }
+    { cursada => (cursada.materia() == materia) && cursada.esAprobada() }
   )
   
-  method agregarCursada(materia, nota) {
-    self.validarCursada(materia, nota)
-    const materiaCursada = new MateriaCursada(
-      nombreDeMateria = materia,
-      nota = nota
-    )
+  method agregarCursada(_materia, nota) {
+    self.validarCursada(_materia, nota)
+    const materiaCursada = new MateriaCursada(materia = _materia, nota = nota)
     cursadas.add(materiaCursada)
   }
   
   method validarCursada(materia, nota) {
-    if ((!nota.between(1, 10)) || self.esMateriaAprobada(materia)) self.error(
+    if ((!nota.between(1, 10)) || self.esCursadaAprobada(materia)) self.error(
         "no es posible registrar esta materia"
       )
   }
+  
   //promedios
+  method materiasDeCarrera(carrera) = cursadas.filter(
+    { cursada => carrera.materiaPertenece(cursada.materia()) }
+  )
+  
+  method promedioEnCarrera(carrera) = self.sumaDeNotasAprobadasEnCarrera(
+    carrera
+  ) / self.cantidadDeMateriasAprobadasEnCarrera(carrera)
+  
+  method sumaDeNotasAprobadasEnCarrera(
+    carrera
+  ) = self.materiasAprobadasDeCarrera(carrera).sum(
+    { materia => materia.nota() }
+  )
+  
+  method cantidadDeMateriasAprobadasEnCarrera(
+    carrera
+  ) = self.materiasAprobadasDeCarrera(carrera).size()
+  
+  method materiasAprobadasDeCarrera(carrera) = self.materiasDeCarrera(
+    carrera
+  ).filter({ materia => materia.esAprobada() })
+  
+  method materiasAprobadas() = cursadas.filter(
+    { materia => materia.esAprobada() }
+  )
+  
+  method promedio() = self.materiasAprobadas().average(
+    { cursada => cursada.nota() }
+  )
 
-  method materiasDeCarrera(carrera) {
-    cursadas.filter({cursada => carrera.materiaPertenece(cursada.materia())})
-  }
+ 
 
-  method promedioEnCarrera(carrera) {
-    
-  }
+}
+
+class MateriaCursada {
+  var property materia
+  var property nota
+  
+  method esAprobada() = nota >= 6
 }
