@@ -1,9 +1,160 @@
-import example.pepita
+import universidad.*
+import alumno2.*
+import requisitos.*
 
-describe "group of tests for pepita" {
-
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
+describe "materias" {
+  const programacion = new Carrera()
+  const tUESS = new Carrera()
+  const tO = new Carrera()
+  const epl = new Materia()
+  const matematica1 = new Materia(
+    año = 1,
+    creditos = 8,
+    requisitos = new RequisitoNulo()
+  )
+  const objetos1 = new Materia(
+    año = 1,
+    creditos = 8,
+    requisitos = new RequisitoNulo()
+  )
+  const objetos2 = new Materia()
+  const objetos3 = new Materia()
+  const bd = new Materia(
+    año = 1,
+    creditos = 8,
+    requisitos = new RequisitoNulo()
+  )
+  const pConc = new Materia()
+  const meya = new Materia()
+  const tys = new Materia()
+  const economia = new Materia()
+  const desarrolloLocal = new Materia()
+  const lea = new Materia(
+    año = 1,
+    creditos = 8,
+    requisitos = new RequisitoNulo()
+  )
+  const cienciasDeLaSalud = new Materia(
+    año = 1,
+    creditos = 8,
+    requisitos = new RequisitoNulo()
+  )
+  const psicologia = new Materia(
+    año = 2,
+    creditos = 4,
+    requisitos = new AñosAnteriores()
+  )
+  const antropologia = new Materia(
+    año = 2,
+    creditos = 4,
+    requisitos = new Creditos(cantidad = 8)
+  )
+  const sociologia = new Materia(
+    año = 3,
+    creditos = 8,
+    requisitos = new Creditos(cantidad = 10)
+  )
+  const alex = new Estudiante()
+  const andy = new Estudiante()
+  
+  method initialize() {
+    programacion.agregarMaterias(
+      #{epl, matematica1, objetos1, objetos2, objetos3, bd, pConc}
+    )
+    tUESS.agregarMaterias(#{meya, tys, economia, desarrolloLocal})
+    tO.agregarMaterias(
+      #{lea, cienciasDeLaSalud, psicologia, antropologia, sociologia}
+    )
+    objetos2.requisitos(
+      new Correlativas(correlativas = #{objetos1, matematica1})
+    )
+    objetos3.requisitos(new Correlativas(correlativas = #{objetos2, bd}))
+    pConc.requisitos(new Correlativas(correlativas = #{objetos1, bd}))
+    desarrolloLocal.requisitos(new Correlativas(correlativas = #{meya}))
+    alex.inscripcionEnCarrera(programacion)
+    alex.inscripcionEnCarrera(tUESS)
+    andy.inscripcionEnCarrera(programacion)
+    andy.inscripcionEnCarrera(tO)
   }
-
+  
+  test "Inscripción a carreras" {
+    assert.equals(#{programacion, tUESS}, alex.carrerasInscriptas())
+    assert.that(alex.materiaPerteneceACarrera(bd))
+    assert.notThat(alex.materiaPerteneceACarrera(psicologia))
+    assert.throwsException({ alex.inscripcionEnCarrera(programacion) })
+  }
+  
+  test "Historia académica" {
+    alex.cursadaFinalizadaEn(matematica1, 2)
+    alex.cursadaFinalizadaEn(objetos1, 10)
+    alex.cursadaFinalizadaEn(economia, 6)
+    alex.cursadaFinalizadaEn(tys, 8)
+    alex.cursadaFinalizadaEn(matematica1, 8)
+    alex.cursadaFinalizadaEn(bd, 2)
+    assert.throwsException({ alex.cursadaFinalizadaEn(matematica1, 7) })
+    assert.throwsException({ alex.cursadaFinalizadaEn(matematica1, 12) })
+    assert.that(alex.aproboMateria(matematica1))
+    assert.notThat(alex.aproboMateria(bd))
+    assert.equals(9, alex.promedioEnCarrera(programacion))
+    assert.equals(2, alex.cantidadDeMateriasAprobadasEnCarrera(programacion))
+    assert.equals(7, alex.promedioEnCarrera(tUESS))
+    assert.throwsException({ alex.promedioEnCarrera(tO) })
+    alex.inscripcionEnCarrera(tO)
+    assert.throwsException({ alex.promedioEnCarrera(tO) })
+    assert.equals(8, alex.promedioDeNotas())
+  }
+  
+  test "Inscripciones a las materias" {
+    alex.cursadaFinalizadaEn(matematica1, 2)
+    alex.cursadaFinalizadaEn(objetos1, 10)
+    alex.cursadaFinalizadaEn(economia, 6)
+    alex.cursadaFinalizadaEn(tys, 8)
+    alex.cursadaFinalizadaEn(matematica1, 8)
+    alex.cursadaFinalizadaEn(bd, 2)
+    andy.cursadaFinalizadaEn(matematica1, 10)
+    andy.cursadaFinalizadaEn(objetos1, 10)
+    assert.that(alex.puedeInscribirseAMateria(objetos2))
+    assert.equals(
+      #{epl, objetos2, bd},
+      alex.materiasAccesiblesDeCarrera(programacion)
+    )
+    assert.equals(#{meya}, alex.materiasAccesiblesDeCarrera(tUESS))
+    assert.notThat(alex.puedeInscribirseAMateria(psicologia))
+    assert.throwsException({ alex.inscribirEnMateria(psicologia) })
+    assert.notThat(alex.puedeInscribirseAMateria(economia))
+    assert.throwsException({ alex.inscribirEnMateria(economia) })
+    assert.notThat(alex.puedeInscribirseAMateria(desarrolloLocal))
+    assert.throwsException({ alex.inscribirEnMateria(desarrolloLocal) })
+    alex.inscribirEnMateria(objetos2)
+    andy.inscribirEnMateria(objetos2)
+    assert.equals(#{alex, andy}, objetos2.alumnosInscriptos())
+  }
+  
+  test "Distintos tipos de requisitos" {
+    andy.cursadaFinalizadaEn(objetos1, 10)
+    andy.cursadaFinalizadaEn(matematica1, 10)
+    assert.equals(
+      #{lea, cienciasDeLaSalud},
+      andy.materiasAccesiblesDeCarrera(tO)
+    )
+    andy.cursadaFinalizadaEn(lea, 10)
+    assert.equals(
+      #{cienciasDeLaSalud, antropologia},
+      andy.materiasAccesiblesDeCarrera(tO)
+    )
+    andy.cursadaFinalizadaEn(antropologia, 10)
+    assert.equals(
+      #{cienciasDeLaSalud, sociologia},
+      andy.materiasAccesiblesDeCarrera(tO)
+    )
+    andy.cursadaFinalizadaEn(cienciasDeLaSalud, 10)
+    assert.equals(
+      #{psicologia, sociologia},
+      andy.materiasAccesiblesDeCarrera(tO)
+    )
+    andy.inscribirEnMateria(psicologia)
+    andy.inscribirEnMateria(sociologia)
+    assert.equals(#{andy}, psicologia.alumnosInscriptos())
+    assert.equals(#{andy}, sociologia.alumnosInscriptos())
+  }
 }
