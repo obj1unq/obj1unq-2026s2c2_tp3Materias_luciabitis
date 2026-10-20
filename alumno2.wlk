@@ -70,9 +70,15 @@ class Estudiante {
   
   method seCumplenRequisitosDe(materia) = materia.alumnoCumpleRequisitos(self)
   
-method aproboAño(materia, año) = historialAcademico.aproboAño(materia, año)
+method carreraDe(materia) = carreras.find({ carrera => carrera.materiaPertenece(materia) })
   
-  method creditos(materia) = historialAcademico.creditosDeCarreraDeMateria(materia)
+  method aproboAño(materia, año) = self.carreraDe(materia).materias().filter(
+    { mat => mat.año() == año }
+  ).all({ mat => self.aproboMateria(mat) })
+  
+  method creditos(materia) = historialAcademico.materiasAprobadasDeCarrera(
+    self.carreraDe(materia)
+  ).sum({ cursada => cursada.materia().creditos() })
 
 
 }
@@ -128,7 +134,6 @@ class HistorialAcademicoDeAlumno {
     { cursada => cursada.nota() }
   )
 
- 
 
 }
 
